@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+if ! test -f index.html; then
+  curl "https://leginfo.legislature.ca.gov/faces/codesTOCSelected.xhtml?tocCode=CONS&tocTitle=+California+Constitution+-+CONS" > index.html
+fi
+
+if ! test -f links.html; then
+  htmlq -a href -- '.codes_toc_list > a[href]' < index.html > links.html
+fi
+
+truncate --size 0 content.html
+while read -r path; do
+  page="https://leginfo.legislature.ca.gov/$path"
+  echo "$page"
+  curl --location "$page" | htmlq -- '#manylawsections' >> content.html
+  #curl --location "$page" >> content.html
+done < links.html
